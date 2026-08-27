@@ -7,22 +7,16 @@ import torch.nn as nn
 import torchvision.transforms as transforms
 from torchvision import models
 from PIL import Image
+from huggingface_hub import hf_hub_download
 
 from .model import ImageCaptioningModel
 
 
 # ============================================================
-# Paths
+# Hugging Face Repository
 # ============================================================
 
-BASE_DIR = Path(__file__).resolve().parent.parent
-
-MODEL_DIR = BASE_DIR / "models"
-
-MODEL_PATH = MODEL_DIR / "best_caption_model.pth"
-RESNET_PATH = MODEL_DIR / "resnet50.pth"
-VOCAB_PATH = MODEL_DIR / "vocabulary.pkl"
-CONFIG_PATH = MODEL_DIR / "config.json"
+HF_REPO_ID = "salmaelshehy/image-caption-generator"
 
 
 # ============================================================
@@ -35,10 +29,44 @@ DEVICE = torch.device(
 
 
 # ============================================================
+# Download Model Artifacts from Hugging Face
+# ============================================================
+
+def download_artifact(filename):
+
+    return hf_hub_download(
+        repo_id=HF_REPO_ID,
+        filename=filename
+    )
+
+
+MODEL_PATH = download_artifact(
+    "best_caption_model.pth"
+)
+
+RESNET_PATH = download_artifact(
+    "resnet50.pth"
+)
+
+VOCAB_PATH = download_artifact(
+    "vocabulary.pkl"
+)
+
+CONFIG_PATH = download_artifact(
+    "config.json"
+)
+
+
+# ============================================================
 # Load Configuration
 # ============================================================
 
-with open(CONFIG_PATH, "r", encoding="utf-8") as f:
+with open(
+    CONFIG_PATH,
+    "r",
+    encoding="utf-8"
+) as f:
+
     config = json.load(f)
 
 
@@ -46,8 +74,13 @@ with open(CONFIG_PATH, "r", encoding="utf-8") as f:
 # Load Vocabulary
 # ============================================================
 
-with open(VOCAB_PATH, "rb") as f:
+with open(
+    VOCAB_PATH,
+    "rb"
+) as f:
+
     vocabulary = pickle.load(f)
+
 
 word2idx = vocabulary["word2idx"]
 idx2word = vocabulary["idx2word"]
@@ -85,11 +118,21 @@ caption_model.eval()
 
 
 # ============================================================
-# Load ResNet50
+# Load ResNet-50 Feature Extractor
 # ============================================================
 
-resnet = models.resnet50(
+# IMPORTANT:
+# During training, ResNet was saved as:
+# nn.Sequential(*list(resnet.children())[:-1])
+#
+# Therefore we must recreate the same architecture.
+
+base_resnet = models.resnet50(
     weights=None
+)
+
+resnet = nn.Sequential(
+    *list(base_resnet.children())[:-1]
 )
 
 
@@ -101,9 +144,6 @@ resnet.load_state_dict(
     )
 )
 
-
-# Remove the classification layer
-resnet.fc = nn.Identity()
 
 resnet = resnet.to(DEVICE)
 
@@ -118,8 +158,16 @@ transform = transforms.Compose([
     transforms.Resize((224, 224)),
     transforms.ToTensor(),
     transforms.Normalize(
-        mean=[0.485, 0.456, 0.406],
-        std=[0.229, 0.224, 0.225]
+        mean=[
+            0.485,
+            0.456,
+            0.406
+        ],
+        std=[
+            0.229,
+            0.224,
+            0.225
+        ]
     )
 ])
 
@@ -134,17 +182,27 @@ def extract_features(image_path):
         image_path
     ).convert("RGB")
 
-    image_tensor = transform(image)
+    image_tensor = transform(
+        image
+    )
 
     image_tensor = image_tensor.unsqueeze(0)
 
-    image_tensor = image_tensor.to(DEVICE)
+    image_tensor = image_tensor.to(
+        DEVICE
+    )
 
     with torch.no_grad():
 
         features = resnet(
             image_tensor
         )
+
+    features = features.squeeze(
+        -1
+    ).squeeze(
+        -1
+    )
 
     return features.squeeze(0)
 
@@ -155,7 +213,6 @@ def extract_features(image_path):
 
 def generate_caption(image_path):
 
-    # Extract image features
     feature = extract_features(
         image_path
     )
@@ -177,6 +234,7 @@ def generate_caption(image_path):
         )
 
         h = h.unsqueeze(0)
+
         c = c.unsqueeze(0)
 
         # Start token
@@ -189,7 +247,9 @@ def generate_caption(image_path):
         generated_words = []
 
         # Generate one word at a time
-        for _ in range(config["max_len"]):
+        for _ in range(
+            config["max_len"]
+        ):
 
             # Word embedding
             embedding = caption_model.embedding(
@@ -219,7 +279,9 @@ def generate_caption(image_path):
             # Ignore padding
             if predicted_id != config["pad_idx"]:
 
-                word = idx2word[predicted_id]
+                word = idx2word[
+                    predicted_id
+                ]
 
                 # Ignore special tokens
                 if word not in [
