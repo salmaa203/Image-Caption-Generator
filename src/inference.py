@@ -1,6 +1,5 @@
 import json
 import pickle
-from pathlib import Path
 
 import torch
 import torch.nn as nn
@@ -33,10 +32,10 @@ DEVICE = torch.device(
 # ============================================================
 
 def download_artifact(filename):
-
     return hf_hub_download(
         repo_id=HF_REPO_ID,
-        filename=filename
+        filename=filename,
+        repo_type="model"
     )
 
 
@@ -66,7 +65,6 @@ with open(
     "r",
     encoding="utf-8"
 ) as f:
-
     config = json.load(f)
 
 
@@ -78,7 +76,6 @@ with open(
     VOCAB_PATH,
     "rb"
 ) as f:
-
     vocabulary = pickle.load(f)
 
 
@@ -116,29 +113,40 @@ caption_model = caption_model.to(DEVICE)
 
 caption_model.eval()
 
+
 # ============================================================
 # Load ResNet-50 Feature Extractor
 # ============================================================
 
+# Create the FULL ResNet-50 first
 base_resnet = models.resnet50(
     weights=None
 )
 
-resnet = nn.Sequential(
-    *list(base_resnet.children())[:-1]
+
+# Load the complete ResNet-50 state dictionary
+resnet_state = torch.load(
+    RESNET_PATH,
+    map_location=DEVICE,
+    weights_only=True
 )
 
-resnet.load_state_dict(
-    torch.load(
-        RESNET_PATH,
-        map_location=DEVICE,
-        weights_only=True
-    )
+base_resnet.load_state_dict(
+    resnet_state
+)
+
+
+# Remove the final classification layer
+# Output becomes 2048-dimensional image features
+resnet = nn.Sequential(
+    *list(base_resnet.children())[:-1]
 )
 
 resnet = resnet.to(DEVICE)
 
 resnet.eval()
+
+
 # ============================================================
 # Image Preprocessing
 # ============================================================
@@ -177,9 +185,7 @@ def extract_features(image_path):
 
     image_tensor = image_tensor.unsqueeze(0)
 
-    image_tensor = image_tensor.to(
-        DEVICE
-    )
+    image_tensor = image_tensor.to(DEVICE)
 
     with torch.no_grad():
 
@@ -187,12 +193,15 @@ def extract_features(image_path):
             image_tensor
         )
 
+    # [1, 2048, 1, 1]
+    # -> [1, 2048]
     features = features.squeeze(
         -1
     ).squeeze(
         -1
     )
 
+    # [1, 2048] -> [2048]
     return features.squeeze(0)
 
 
@@ -206,18 +215,25 @@ def generate_caption(image_path):
         image_path
     )
 
+    # [2048] -> [1, 2048]
     feature = feature.unsqueeze(0)
 
     feature = feature.to(DEVICE)
 
     with torch.no_grad():
 
+        # ----------------------------------------------------
         # Initialize hidden state
+        # ----------------------------------------------------
+
         h = caption_model.init_h(
             feature
         )
 
+        # ----------------------------------------------------
         # Initialize cell state
+        # ----------------------------------------------------
+
         c = caption_model.init_c(
             feature
         )
@@ -226,7 +242,10 @@ def generate_caption(image_path):
 
         c = c.unsqueeze(0)
 
+        # ----------------------------------------------------
         # Start token
+        # ----------------------------------------------------
+
         current_word = torch.tensor(
             [[config["start_idx"]]],
             dtype=torch.long,
@@ -235,7 +254,10 @@ def generate_caption(image_path):
 
         generated_words = []
 
-        # Generate one word at a time
+        # ----------------------------------------------------
+        # Generate caption word by word
+        # ----------------------------------------------------
+
         for _ in range(
             config["max_len"]
         ):
@@ -261,18 +283,27 @@ def generate_caption(image_path):
                 dim=-1
             ).item()
 
-            # Stop at <end>
+            # ------------------------------------------------
+            # Stop if <end> token is generated
+            # ------------------------------------------------
+
             if predicted_id == config["end_idx"]:
                 break
 
+            # ------------------------------------------------
             # Ignore padding
+            # ------------------------------------------------
+
             if predicted_id != config["pad_idx"]:
 
                 word = idx2word[
                     predicted_id
                 ]
 
+                # ------------------------------------------------
                 # Ignore special tokens
+                # ------------------------------------------------
+
                 if word not in [
                     "<start>",
                     "<end>",
@@ -283,12 +314,20 @@ def generate_caption(image_path):
                         word
                     )
 
+            # ------------------------------------------------
             # Next input word
+            # ------------------------------------------------
+
             current_word = torch.tensor(
                 [[predicted_id]],
                 dtype=torch.long,
                 device=DEVICE
             )
+
+
+    # ========================================================
+    # Final Caption
+    # ========================================================
 
     return " ".join(
         generated_words
