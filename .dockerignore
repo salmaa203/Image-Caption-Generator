@@ -1,0 +1,15 @@
+__pycache__
+*.pyc
+.pytest_cache
+.git
+.ipynb_checkpoints
+Task1_2.ipynb
+Images
+tests
+check_config.py
+check_vocab.py
+inspect_checkpoint.py
+run_inference.py
+test_production.py
+temp_uploaded_image.jpg
+captions.txt

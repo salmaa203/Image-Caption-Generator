@@ -1,0 +1,16 @@
+__pycache__/
+*.pyc
+.pytest_cache/
+.ipynb_checkpoints/
+
+# Uploaded / dataset images
+Images/
+temp_uploaded_image.jpg
+
+# Model files - will be uploaded to Hugging Face
+models/
+
+# Local environment
+.venv/
+venv/
+.env
