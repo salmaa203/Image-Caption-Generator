@@ -230,12 +230,12 @@ Update the table below with the actual values produced by the final notebook run
 
 | Metric | Score |
 |---|---:|
-| BLEU-1 | TBD |
-| BLEU-2 | TBD |
-| BLEU-3 | TBD |
-| BLEU-4 | TBD |
-| ROUGE-L | TBD |
-| METEOR | TBD |
+| BLEU-1 | 0.5862 |
+| BLEU-2 | 0.4071 |
+| BLEU-3 | 0.2710 |
+| BLEU-4 | 0.1798 |
+| ROUGE-L | 0.4562 |
+| METEOR | 0.3687 |
 
 ---
 
@@ -393,10 +393,9 @@ The Streamlit application can be deployed to a public hosting service.
 
 | Resource | Link |
 |---|---|
-| GitHub Repository | `TODO: ADD GITHUB LINK` |
-| Hugging Face Model | https://huggingface.co/salmaelshehy/image-caption-generator/tree/main |
-| Live Demo | `TODO: ADD DEMO LINK` |
-
+| GitHub Repository | https://github.com/salmaa203/Image-Caption-Generator.git |
+| Hugging Face Model | https://huggingface.co/salmaelshehy/image-caption-generator |
+| Live Demo | https://image-caption-generator-bbuxl5sxt3wognbu4r6kkr.streamlit.app/ |
 ---
 
 # Demo
