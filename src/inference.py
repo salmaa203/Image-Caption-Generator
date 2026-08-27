@@ -116,16 +116,9 @@ caption_model = caption_model.to(DEVICE)
 
 caption_model.eval()
 
-
 # ============================================================
 # Load ResNet-50 Feature Extractor
 # ============================================================
-
-# IMPORTANT:
-# During training, ResNet was saved as:
-# nn.Sequential(*list(resnet.children())[:-1])
-#
-# Therefore we must recreate the same architecture.
 
 base_resnet = models.resnet50(
     weights=None
@@ -135,21 +128,17 @@ resnet = nn.Sequential(
     *list(base_resnet.children())[:-1]
 )
 
-
 resnet.load_state_dict(
     torch.load(
         RESNET_PATH,
         map_location=DEVICE,
-        weights_only=False
+        weights_only=True
     )
 )
-
 
 resnet = resnet.to(DEVICE)
 
 resnet.eval()
-
-
 # ============================================================
 # Image Preprocessing
 # ============================================================
