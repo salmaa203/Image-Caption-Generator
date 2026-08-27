@@ -131,7 +131,7 @@ This prevents captions belonging to the same image from appearing in different s
 
 ---
 
-# 🧠 Model Architecture
+# Model Architecture
 
 ## 1. Image Feature Extraction
 
@@ -373,22 +373,6 @@ vocabulary.pkl
 config.json
 ```
 
-### Hugging Face Model
-
-**Public Model Link:**  
-`TODO: ADD HUGGING FACE MODEL LINK`
-
----
-
-# Public Demo
-
-The Streamlit application can be deployed to a public hosting service.
-
-**Live Demo:**  
-`TODO: ADD PUBLIC STREAMLIT / HOSTING LINK`
-
----
-
 # Project Links
 
 | Resource | Link |
@@ -400,25 +384,10 @@ The Streamlit application can be deployed to a public hosting service.
 
 # Demo
 
-Add a short screen recording showing:
-
-1. Opening the application.
-2. Uploading an image.
-3. Generating a caption.
-4. Displaying the generated result.
-
-Recommended location:
-
-```text
-README.md
 ```
-
-For example:
-
-```markdown
 ## Demo
 
-[Watch the demo video](YOUR_VIDEO_LINK)
+[Watch the demo video](https://drive.google.com/file/d/1tEg2pyKOtYzQZMlAuQorjRYawoh0AqJG/view?usp=sharing))
 ```
 
 ---
