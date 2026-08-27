@@ -1,6 +1,6 @@
 torch
 torchvision
-Pillow
 streamlit
-pytest
+Pillow
 numpy
+huggingface_hub
