@@ -4,9 +4,7 @@ from PIL import Image
 from src.inference import generate_caption
 
 
-# ============================================
 # Page Configuration
-# ============================================
 
 st.set_page_config(
     page_title="Image Caption Generator",
@@ -15,9 +13,7 @@ st.set_page_config(
 )
 
 
-# ============================================
 # Title
-# ============================================
 
 st.title("🖼️ Image Caption Generator")
 
@@ -26,19 +22,14 @@ st.write(
 )
 
 
-# ============================================
 # Image Upload
-# ============================================
 
 uploaded_file = st.file_uploader(
     "Choose an image",
     type=["jpg", "jpeg", "png"]
 )
 
-
-# ============================================
 # Caption Generation
-# ============================================
 
 if uploaded_file is not None:
 
